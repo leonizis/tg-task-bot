@@ -1,26 +1,17 @@
-import openai
+import os
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-openai.api_key = 'OPENAI_API_KEY'
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-async def start(update: Update, context):
-    await update.message.reply_text("Бот готов! Добавьте задачи.")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Бот готов!")
 
-async def add_task(update: Update, context):
-    user_text = update.message.text
-    # обработка задачи через OpenAI
-    response = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "Определи задачи"},
-            {"role": "user", "content": user_text},
-        ]
-    )
-    await update.message.reply_text(f"Задача: {response.choices[0].message.content}")
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(update.message.text)
 
 if __name__ == '__main__':
-    app = ApplicationBuilder().token('BOT_TOKEN').build()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT, add_task))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
     app.run_polling()
